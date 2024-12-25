@@ -7,6 +7,10 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+		fontFamily: {
+			'quicksand': ['quicksand']
+		},
+
     extend: {
       colors: {
         background: "var(--background)",

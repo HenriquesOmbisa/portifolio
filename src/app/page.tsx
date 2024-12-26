@@ -264,16 +264,16 @@ const handleScroll = (id: string) => {
         </header>
 
         {/* Hero Section */}
-        <section className="h-[65vh] pt-8 flex flex-col justify-center items-center text-center px-6">
+        <section className="h-[65vh] mt-10 flex flex-col justify-center items-center text-center px-6">
           <h2 className="text-4xl md:text-6xl font-extrabold drop-shadow-md">{t.hero.greeting}</h2>
           <p className="mt-4 text-gray-600 text-lg md:text-xl font-medium">{t.hero.description}</p>
-          <div className="mt-8 flex flex-col md:flex-row gap-4">
+          <div className="mt-8 flex flex-col justify-center items-center md:flex-row gap-4">
             <a
               href="mailto:henriquesombisa@gmail.com"
               className="text-gray-600 hover:text-black text-lg"
             >
               <button
-                className="bg-black text-white py-3 px-6 rounded-full shadow-lg hover:bg-black/90 transition-all flex items-center gap-2"
+                className="bg-black text-white py-3 px-6 rounded-full m-auto shadow-lg hover:bg-black/90 transition-all flex items-center gap-2"
               >
                 {t.hero.hireMe} <FaEnvelope />
               </button>

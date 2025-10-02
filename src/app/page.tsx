@@ -304,7 +304,7 @@ const Header: React.FC<{
 
       {menuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-800 shadow-lg py-4">
-          <ul className="space-y-3 px-6">
+          <ul className="space-y-6 px-6">
             {['about', 'skills', 'services', 'gallery', 'projects', 'blog', 'contact'].map((item) => (
               <li key={item}>
                 <button 
@@ -1303,7 +1303,7 @@ const ServiceRequestModal: React.FC<{
               />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -1393,7 +1393,7 @@ const MediaViewer: React.FC<{
           </>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden max-h-[80vh] flex flex-col">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden max-h-[93vh] flex flex-col overflow-y-auto">
           <div className="flex-1 relative">
             {selectedMedia.type === 'image' ? (
               <img 
@@ -1431,22 +1431,8 @@ const MediaViewer: React.FC<{
               ))}
             </div>
             
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                {selectedMedia.type}
-              </span>
-              <div className="flex gap-2">
-                {selectedMedia.projectUrl && (
-                  <a
-                    href={selectedMedia.projectUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 font-medium flex items-center gap-2"
-                  >
-                    <FaGithub />
-                    {t.gallery.viewProject}
-                  </a>
-                )}
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <div className="flex flex-wrap gap-2">
                 {selectedMedia.demoUrl && (
                   <a
                     href={selectedMedia.demoUrl}
@@ -1729,10 +1715,10 @@ ${serviceRequest.description}
         ? 'Modern and responsive websites and web applications'
         : 'Sites web et applications modernes et responsives',
       features: language === 'pt'
-        ? ["Frontend & Backend", "Design Responsivo", "Otimização SEO", "Performance"]
+        ? ["Frontend, Backend & Wordpress", "Design Responsivo", "Otimização SEO", "Performance"]
         : language === 'en'
-        ? ["Frontend & Backend", "Responsive Design", "SEO Optimization", "Performance"]
-        : ["Frontend & Backend", "Design Responsive", "Optimisation SEO", "Performance"],
+        ? ["Frontend, Backend & Wordpress", "Responsive Design", "SEO Optimization", "Performance"]
+        : ["Frontend, Backend & Wordpress", "Design Responsive", "Optimisation SEO", "Performance"],
       priceRange: {
         usd: { fixed: "From $100", hourly: "$15 - $30/h" },
         aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(90000)}`, hourly: `${formatKwanza(13500)} - ${formatKwanza(27000)}/h`}
@@ -1766,7 +1752,7 @@ ${serviceRequest.description}
         : language === 'en'
         ? 'Robust systems and scalable RESTful APIs'
         : 'Systèmes robustes et APIs RESTful évolutives',
-      features: ["Node.js & Golang", "JWT Authentication", "Documentation", "Testing"],
+      features: ["Golang, PHP & Node.js", "JWT Authentication", "Documentation", "Testing"],
       priceRange: {
         usd: { fixed: "From $150", hourly: "$20 - $40/h" },
         aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(135000)}`, hourly: `${formatKwanza(18000)} - ${formatKwanza(36000)}/h` }
@@ -1796,7 +1782,7 @@ ${serviceRequest.description}
         : language === 'en'
         ? 'Cloud deployment and infrastructure'
         : 'Déploiement et infrastructure cloud',
-      features: ["AWS & Vercel", "CI/CD", "Docker", "Monitoring"],
+      features: ["AWS, Render & Vercel", "CI/CD", "Docker", "Monitoring"],
       priceRange: {
         usd: { fixed: "From $180", hourly: "$25 - $60/h" },
         aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(162000)}`, hourly: `${formatKwanza(22500)} - ${formatKwanza(54000)}/h` }

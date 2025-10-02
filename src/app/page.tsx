@@ -6,7 +6,7 @@ import {
   FaGithub, FaLinkedin, FaEnvelope, FaWhatsapp, FaCode, 
   FaServer, FaDatabase, FaCloud, FaStar,
   FaExternalLinkAlt, FaPlay, FaTimes, FaChevronLeft,
-  FaChevronRight, FaFilter, FaMoon, FaSun
+  FaChevronRight, FaMoon, FaSun
 } from 'react-icons/fa';
 import { FaGolang } from "react-icons/fa6";
 import { SiCplusplus, SiDevdotto } from 'react-icons/si';
@@ -617,18 +617,8 @@ const GallerySection: React.FC<{
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   openMediaViewer: (media: MediaFile, index: number) => void;
-}> = ({ t, selectedCategory, setSelectedCategory, openMediaViewer }) => {
-  const tags = ['all', 'web', 'mobile', 'backend'];
+}> = ({ t, selectedCategory, openMediaViewer }) => {
   
-  const getTagLabel = (tag: string) => {
-    const tagLabels: Record<string, string> = {
-      'all': t.gallery.all,
-      'web': t.gallery.webDevelopment,
-      'mobile': t.gallery.mobileApps,
-      'backend': t.gallery.backend
-    };
-    return tagLabels[tag] || tag;
-  };
 
   return (
     <section id="gallery" className="py-20 bg-gray-50 dark:bg-gray-900">
@@ -637,24 +627,6 @@ const GallerySection: React.FC<{
         <p className="text-gray-600 dark:text-gray-300 text-center mb-12 max-w-2xl mx-auto">
           {t.gallery.subtitle}
         </p>
-
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setSelectedCategory(tag)}
-              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
-                selectedCategory === tag 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              <FaFilter />
-              {getTagLabel(tag)}
-            </button>
-          ))}
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {MEDIA_FILES
             .filter(media => selectedCategory === 'all' || media.tags.includes(selectedCategory))

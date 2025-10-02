@@ -1,51 +1,285 @@
-// minimal_portfolio
-// Created by Nzuzi Henriques Kondo Ombisa - 25/12/2024
-// License - MIT
-
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, JSX } from 'react';
 import Head from 'next/head';
-import { FaHtml5, FaCss3Alt, FaJs, FaReact, FaNodeJs, FaPhp, FaJava, FaGithub, FaLinkedin, FaEnvelope, FaWhatsapp } from 'react-icons/fa';
+import { 
+  FaHtml5, FaCss3Alt, FaJs, FaReact, FaNodeJs, FaPhp, 
+  FaGithub, FaLinkedin, FaEnvelope, FaWhatsapp, FaCode, 
+  FaMobile, FaServer, FaDatabase, FaCloud, FaStar,
+  FaExternalLinkAlt, FaPlay, FaTimes, FaChevronLeft,
+  FaChevronRight, FaFilter, FaMoon, FaSun
+} from 'react-icons/fa';
 import { FaGolang } from "react-icons/fa6";
-import { SiCplusplus } from 'react-icons/si';
+import { SiCplusplus, SiDevdotto } from 'react-icons/si';
 import { RiTailwindCssFill } from "react-icons/ri";
-import { SiTypescript, SiMongodb, SiMysql } from "react-icons/si";
+import { SiTypescript, SiMysql } from "react-icons/si";
 import { BiLogoPostgresql } from "react-icons/bi";
-import Link from 'next/link';
+import { formatKwanza } from '../hook/usePrice';
+import { 
+  Eye, 
+  Calendar, 
+  MessageCircle, 
+  Heart,
+  Tag,
+  Image as ImageIcon,
+  Video
+} from 'lucide-react';
 
-const Home = () => {
-  type Languages = 'pt' | 'en' | 'fr';
-
-  type Project = {
-    title: string;
-    content: string;
-    url: string;
-  };
-  
-  type Translations = {
+// Tipos
+type Languages = 'pt' | 'en' | 'fr';
+type Theme = 'light' | 'dark';
+type Translations = {
     title: string;
     hero: {
       greeting: string;
       description: string;
       hireMe: string;
       whatsapp: string;
+      viewProjects: string;
     };
     about: {
       heading: string;
       text: string;
     };
     skills: string;
+    services: {
+      title: string;
+      subtitle: string;
+      selectService: string;
+      requestService: string;
+      price: string;
+      deadline: string;
+      description: string;
+      sendRequest: string;
+      sending: string;
+      budgetOptions: {
+        low: string;
+        medium: string;
+        high: string;
+        custom: string;
+      };
+      deadlineOptions: {
+        urgent: string;
+        medium: string;
+        flexible: string;
+      };
+    };
     projects: {
       title: string;
       description: string;
-      contents: Project[];
+      viewOnGitHub: string;
+      stars: string;
+      forks: string;
+      updated: string;
+    };
+    gallery: {
+      title: string;
+      subtitle: string;
+      all: string;
+      webDevelopment: string;
+      mobileApps: string;
+      backend: string;
+      viewProject: string;
+      viewDemo: string;
+    };
+    blog: {
+      title: string;
+      subtitle: string;
+      readMore: string;
+      reactions: string;
+      comments: string;
+      published: string;
+    };
+    contact: {
+      title: string;
+      subtitle: string;
+      name: string;
+      email: string;
+      phone: string;
+      message: string;
+      send: string;
+      sending: string;
     };
     footer: string;
   };
 
+type Project = {
+  id: number;
+  name: string;
+  description: string;
+  html_url: string;
+  language: string;
+  stargazers_count: number;
+  forks_count: number;
+  updated_at: string;
+};
+
+type Service = {
+  id: string;
+  icon: JSX.Element;
+  title: string;
+  description: string;
+  features: string[];
+  priceRange: {
+    usd: { fixed: string; hourly: string };
+    aoa: { fixed: string; hourly: string };
+  };
+};
+
+type BlogPost = {
+  id: number;
+  title: string;
+  description: string;
+  url: string;
+  cover_image: string;
+  tag_list: string[];
+  readable_publish_date: string;
+  positive_reactions_count: number;
+  comments_count: number;
+};
+
+type ServiceRequest = {
+  service: string;
+  name: string;
+  email: string;
+  phone: string;
+  price: string;
+  deadline: string;
+  description: string;
+};
+
+
+type MidiaFile = {
+  url: string,
+  tags: string[]
+  type: string
+}
+
+export default function Home() {
   const [language, setLanguage] = useState<Languages>('pt');
+  const [theme, setTheme] = useState<Theme>('dark');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [blogLoading, setBlogLoading] = useState(true);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [isSubmittingFromWhatsapp, setIsSubmittingFromWhatsapp] = useState(false);
+  const [isSubmittingFromEmail, setIsSubmittingFromEmail] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedMedia, setSelectedMedia] = useState<MidiaFile | null>(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [tags, setTags] = useState<string[]>([]);
+  const [mediaByTag, setMediaByTag] = useState<Record<string, MidiaFile[]>>({});
+  const [sendFromWhatsapp, setSendFromWhatsapp] = useState<boolean>(true);
+  
+  const [serviceRequest, setServiceRequest] = useState<ServiceRequest>({
+    service: '',
+    name: '',
+    email: '',
+    phone: '',
+    price: '',
+    deadline: '',
+    description: ''
+  });
+
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const cloudName = 'dg9nrdi5c';
+
+  const midias: MidiaFile[] = [
+    {
+      url: "/midia/eduplus.png",
+      tags: ["Imagem", "React", "Nextjs"],
+      type: "image",
+    },
+    {
+      url: "/midia/globaltrade.png",
+      tags: ["Imagem", "React", "Nextjs"],
+      type: "image",
+    },
+    {
+      url: "/midia/paperhub.png",
+      tags: ["Imagem", "React", "Nextjs"],
+      type: "image",
+    },
+    {
+      url: "/midia/saudeplus.png",
+      tags: ["Imagem", "React", "Nextjs"],
+      type: "image",
+    },
+    {
+      url: "/midia/zyon.webm",
+      tags: ["Video", "React", "Nextjs"],
+      type: "video",
+    },
+  ]
+
+  // Inicializar tema do localStorage ou preferência do sistema
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      setTheme(systemTheme);
+    }
+  }, []);
+
+  // Aplicar tema ao documento
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
+    } else {
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+    }
+    
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Toggle tema
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  
+
+  // Buscar projetos do GitHub
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('https://api.github.com/users/HenriquesOmbisa/repos?sort=updated&per_page=20');
+        const data = await response.json();
+        setProjects(data);
+      } catch (error) {
+        console.error('Erro ao buscar projetos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  // Buscar posts do Dev.to
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        const response = await fetch('https://dev.to/api/articles?username=henriquesombisa');
+        const data = await response.json();
+        setBlogPosts(data);
+      } catch (error) {
+        console.error('Erro ao buscar posts do blog:', error);
+      } finally {
+        setBlogLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,321 +299,1471 @@ const Home = () => {
 
   const content: Record<Languages, Translations> = {
     pt: {
-      title: "Henriques' Portfolio",
+      title: "Henriques Ombisa - Desenvolvedor Full Stack",
       hero: {
-        greeting: "Olá 👋 Sou Heriques Ombisa - desenvolvedor  baseado em Luanda, Angola.",
-        description: "Programador e Empreendedor",
+        greeting: "Olá 👋 Sou Henriques Ombisa",
+        description: "Desenvolvedor Full Stack & Empreendedor",
         hireMe: "Contrate-me",
-        whatsapp: "Contactar pelo WhatsApp"
+        whatsapp: "WhatsApp",
+        viewProjects: "Ver Projetos"
       },
       about: {
         heading: "Sobre Mim",
-        text: "Sou um entusiasta autodidata e programador apaixonado por tecnologia e inovação. Trabalho com HTML, CSS, JavaScript, React, Node.js, PHP, Golang, C/C++ e outras tecnologias. Valorizo o trabalho em equipe, a colaboração e a troca de ideias, acreditando que grandes soluções nascem do esforço conjunto. Meu objetivo é criar soluções práticas, impactantes e funcionalmente robustas, que atendam às necessidades reais das pessoas."
+        text: "Sou um desenvolvedor full stack apaixonado por tecnologia e inovação. Com expertise em diversas tecnologias modernas, crio soluções robustas e escaláveis. Valorizo o trabalho em equipe e acredito que grandes soluções nascem da colaboração e troca de ideias."
       },
-      skills: "Habilidades",
+      skills: "Habilidades & Tecnologias",
+      services: {
+        title: "Serviços",
+        subtitle: "Soluções completas para suas necessidades digitais",
+        selectService: "Selecionar Serviço",
+        requestService: "Solicitar Serviço",
+        price: "Preço",
+        deadline: "Prazo",
+        description: "Descrição do Projeto",
+        sendRequest: "Enviar",
+        sending: "Enviando...",
+        budgetOptions: {
+          low: "Até "+ formatKwanza(80000),
+          medium: formatKwanza(80000) + " - " + formatKwanza(160000),
+          high: formatKwanza(160000) +" - "+ formatKwanza(400000),
+          custom: "Personalizado"
+        },
+        deadlineOptions: {
+          urgent: "Urgente (1-2 semanas)",
+          medium: "Médio (3-4 semanas)",
+          flexible: "Flexível (1-2 meses)"
+        }
+      },
       projects: {
-        title: "Projectos",
-        description: "Visite o git se gostar, deixe uma estrela, se não também deixe estrela pelo esforço, obrigado!😄😄",
-        contents: [
-          {
-            title: "serverMultThreads",
-            content: `O serverMultThreads é um expermento de servidor web multthread java
-            focado em usar apenas os recursos nativos da linguagem. `,
-            url: "https://github.com/HenriquesOmbisa/serverMultThreads"
-          },
-          {
-            title: "simple-non-blocking-multithreaded-cpp-server",
-            content: `Como o nome já indica, é um servidor C++, que por agora funcionando para
-            renderizar páginas estáticas. Ele é muito rápido, usa threads e é não bloqueante. `,
-            url: "https://github.com/HenriquesOmbisa/simple-non-blocking-multithreaded-cpp-server"
-          },
-          {
-            title: "php-mini-web-framework",
-            content: `È um expermento de mini framework php com uma orm baseada no prisma,
-            para sua concepção usei php puro.`,
-            url: "https://github.com/HenriquesOmbisa/php-mini-web-framework"
-          },
-          ,
-          {
-            title: "Porifolio",
-            content: `Este mesmo portifolio desenvolvido com o intuito de apresentar minhas habilidades como desenvolvedor. Usei NextJS 15.1.2 e Tailwind.`,
-            url: "https://github.com/HenriquesOmbisa/portifolio"
-          }
-        ] as Project[]
+        title: "Projetos no GitHub",
+        description: "Alguns dos meus projetos open source",
+        viewOnGitHub: "Ver no GitHub",
+        stars: "Estrelas",
+        forks: "Forks",
+        updated: "Atualizado"
+      },
+      gallery: {
+        title: "Portfólio Visual",
+        subtitle: "Galeria dos meus principais projetos desenvolvidos",
+        all: "Todos",
+        webDevelopment: "Desenvolvimento Web",
+        mobileApps: "Apps Mobile",
+        backend: "Backend & APIs",
+        viewProject: "Ver Projeto",
+        viewDemo: "Ver Demo"
+      },
+      blog: {
+        title: "Blog & Artigos",
+        subtitle: "Compartilhando conhecimento e experiências",
+        readMore: "Ler Mais",
+        reactions: "Reações",
+        comments: "Comentários",
+        published: "Publicado"
+      },
+      contact: {
+        title: "Vamos Trabalhar Juntos?",
+        subtitle: "Entre em contato para discutir seu projeto",
+        name: "Nome",
+        email: "Email",
+        phone: "Telefone",
+        message: "Mensagem",
+        send: "Enviar Mensagem",
+        sending: "Enviando..."
       },
       footer: "Feito com 💓 por Henriques Ombisa",
     },
     en: {
-      title: "Henriques' Portfolio",
+      title: "Henriques Ombisa - Full Stack Developer",
       hero: {
-        greeting: "Hello 👋I'm Heriques Ombisa - developer based in Luanda, Angola.",
-        description: "Programmer and Entrepreneur",
-        hireMe: "Hire me",
-        whatsapp: "Contact on WhatsApp"
+        greeting: "Hello 👋 I'm Henriques Ombisa",
+        description: "Full Stack Developer & Entrepreneur",
+        hireMe: "Hire Me",
+        whatsapp: "WhatsApp",
+        viewProjects: "View Projects"
       },
       about: {
         heading: "About Me",
-        text: "I am a self-taught enthusiast and programmer passionate about technology and innovation. I work with HTML, CSS, JavaScript, React, Node.js, PHP, Golang, C/C++ and other technologies. I value teamwork, collaboration and the exchange of ideas, believing that great solutions are born from joint effort. My goal is to create practical, impactful and functionally robust solutions that meet people's real needs."
+        text: "I'm a full stack developer passionate about technology and innovation. With expertise in various modern technologies, I create robust and scalable solutions. I value teamwork and believe great solutions are born from collaboration and idea exchange."
       },
-      skills: "Skills",
+      skills: "Skills & Technologies",
+      services: {
+        title: "Services",
+        subtitle: "Complete solutions for your digital needs",
+        selectService: "Select Service",
+        requestService: "Request Service",
+        price: "Price",
+        deadline: "Deadline",
+        description: "Project Description",
+        sendRequest: "Send",
+        sending: "Sending...",
+        budgetOptions: {
+          low: "Up to "+ formatKwanza(80000),
+          medium: formatKwanza(80000) + " - " + formatKwanza(160000),
+          high: formatKwanza(160000) +" - "+ formatKwanza(400000),
+          custom: "Custom"
+        },
+        deadlineOptions: {
+          urgent: "Urgent (1-2 weeks)",
+          medium: "Medium (3-4 weeks)",
+          flexible: "Flexible (1-2 months)"
+        }
+      },
       projects: {
-        title: "Projects",
-        description: "Visit git if you like it, leave a star, if not also leave a star for the effort, thanks!😄😄",
-        contents: [
-          {
-            title: "serverMultThreads",
-            content: `serverMult Threads is a Java multithreaded web server experiment focused on using only the native language features. `,
-            url: "https://github.com/HenriquesOmbisa/serverMultThreads"
-          },
-          {
-            title: "simple-non-blocking-multithreaded-cpp-server",
-            content: `As the name suggests, it is a C++ server, which currently works to
-render static pages. It is very fast, uses threads and is non-blocking. `,
-            url: "https://github.com/HenriquesOmbisa/simple-non-blocking-multithreaded-cpp-server"
-          },
-          {
-            title: "php-mini-web-framework",
-            content: `It is an experiment of mini php framework with an orm based on prism,
-for its design I used pure php.`,
-            url: "https://github.com/HenriquesOmbisa/php-mini-web-framework"
-          },
-          {
-            title: "Porifolio",
-            content: `This same portfolio was developed with the intention of presenting my skills as a developer. I used NextJS 15.1.2 and Tailwind.`,
-            url: "https://github.com/HenriquesOmbisa/portifolio"
-          }
-        ] as Project[]
+        title: "GitHub Projects",
+        description: "Some of my open source projects",
+        viewOnGitHub: "View on GitHub",
+        stars: "Stars",
+        forks: "Forks",
+        updated: "Updated"
+      },
+      gallery: {
+        title: "Visual Portfolio",
+        subtitle: "Gallery of my main developed projects",
+        all: "All",
+        webDevelopment: "Web Development",
+        mobileApps: "Mobile Apps",
+        backend: "Backend & APIs",
+        viewProject: "View Project",
+        viewDemo: "View Demo"
+      },
+      blog: {
+        title: "Blog & Articles",
+        subtitle: "Sharing knowledge and experiences",
+        readMore: "Read More",
+        reactions: "Reactions",
+        comments: "Comments",
+        published: "Published"
+      },
+      contact: {
+        title: "Let's Work Together?",
+        subtitle: "Get in touch to discuss your project",
+        name: "Name",
+        email: "Email",
+        phone: "Phone",
+        message: "Message",
+        send: "Send Message",
+        sending: "Sending..."
       },
       footer: "Made with 💓 by Henriques Ombisa",
     },
     fr: {
-      title: "Portfolio de Henriques",
+      title: "Henriques Ombisa - Développeur Full Stack",
       hero: {
-        greeting: "Bonjour 👋 Je m'appelle Heriques Ombisa - développeur basé à Luanda, en Angola.",
-        description: "Programmeur et Entrepreneur",
+        greeting: "Bonjour 👋 Je suis Henriques Ombisa",
+        description: "Développeur Full Stack & Entrepreneur",
         hireMe: "Engagez-moi",
-        whatsapp: "Contacter sur WhatsApp"
+        whatsapp: "WhatsApp",
+        viewProjects: "Voir les Projets"
       },
       about: {
         heading: "À Propos de Moi",
-        text: "Je suis un passionné autodidacte et programmeur passionné par la technologie et l'innovation. Je travaille avec HTML, CSS, JavaScript, React, Node.js, PHP, Golang, C/C++ et d'autres technologies. J'apprécie le travail d'équipe, la collaboration et l'échange d'idées, convaincu que les grandes solutions naissent d'efforts conjoints. Mon objectif est de créer des solutions pratiques, percutantes et fonctionnellement robustes qui répondent aux besoins réels des gens."
+        text: "Je suis un développeur full stack passionné par la technologie et l'innovation. Avec une expertise dans diverses technologies modernes, je crée des solutions robustes et évolutives. Je valorise le travail d'équipe et crois que les grandes solutions naissent de la collaboration et de l'échange d'idées."
       },
-      skills: "Compétences",
+      skills: "Compétences & Technologies",
+      services: {
+        title: "Services",
+        subtitle: "Solutions complètes pour vos besoins numériques",
+        selectService: "Sélectionner un Service",
+        requestService: "Demander un Service",
+        price: "Price",
+        deadline: "Délai",
+        description: "Description du Projet",
+        sendRequest: "Envoyer",
+        sending: "Envoi en cours...",
+        budgetOptions: {
+          low: "Jusqu'à 500€",
+          medium: "500€ - 2000€",
+          high: "2000€ - 5000€",
+          custom: "Personnalisé"
+        },
+        deadlineOptions: {
+          urgent: "Urgent (1-2 semaines)",
+          medium: "Moyen (3-4 semaines)",
+          flexible: "Flexible (1-2 mois)"
+        }
+      },
       projects: {
-        title: "Projets",
-        description: "Visitez git si vous l'aimez, laissez une étoile, sinon laissez aussi une étoile pour l'effort, merci !😄😄",
-        contents: [
-          {
-            title: "serverMultThreads",
-            content: `serverMult Threads est une expérience de serveur Web Java multithread axée sur l'utilisation uniquement des fonctionnalités natives du langage.`,
-            url: "https://github.com/HenriquesOmbisa/serverMultThreads"
-          },
-          {
-            title: "simple-non-blocking-multithreaded-cpp-server",
-            content: `Comme son nom l'indique déjà, il s'agit d'un serveur C++, qui fonctionne pour l'instant pour
- rendre des pages statiques. C'est très rapide, utilise des threads et n'est pas bloquant.`,
-            url: "https://github.com/HenriquesOmbisa/simple-non-blocking-multithreaded-cpp-server"
-          },
-          {
-            title: "php-mini-web-framework",
-            content: `Il s'agit d'une expérience de mini-framework php avec un orm basé sur prism,
- pour sa conception, j'ai utilisé du php pur.`,
-            url: "https://github.com/HenriquesOmbisa/php-mini-web-framework"
-          },
-          {
-            title: "Porifolio",
-            content: `Ce même portfolio a été développé dans le but de présenter mes compétences en tant que développeur. J'ai utilisé NextJS 15.1.2 et Tailwind.`,
-            url: "https://github.com/HenriquesOmbisa/portifolio"
-          }
-        ] as Project[]
+        title: "Projets GitHub",
+        description: "Quelques-uns de mes projets open source",
+        viewOnGitHub: "Voir sur GitHub",
+        stars: "Étoiles",
+        forks: "Forks",
+        updated: "Mis à jour"
+      },
+      gallery: {
+        title: "Portfolio Visuel",
+        subtitle: "Galerie de mes principaux projets développés",
+        all: "Tous",
+        webDevelopment: "Développement Web",
+        mobileApps: "Apps Mobile",
+        backend: "Backend & APIs",
+        viewProject: "Voir le Projet",
+        viewDemo: "Voir la Demo"
+      },
+      blog: {
+        title: "Blog & Articles",
+        subtitle: "Partage de connaissances et d'expériences",
+        readMore: "Lire Plus",
+        reactions: "Réactions",
+        comments: "Commentaires",
+        published: "Publié"
+      },
+      contact: {
+        title: "Travaillons Ensemble?",
+        subtitle: "Contactez-moi pour discuter de votre projet",
+        name: "Nom",
+        email: "Email",
+        phone: "Téléphone",
+        message: "Message",
+        send: "Envoyer le Message",
+        sending: "Envoi en cours..."
       },
       footer: "Réalisé avec 💓 par Henriques Ombisa",
     }
   };
-const t = content[language];
 
-const handleScroll = (id: string) => {
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
+  const services: Service[] = [
+  {
+    id: 'web-development',
+    icon: <FaCode className="text-3xl text-blue-600 dark:text-blue-400" />,
+    title: language === 'pt' ? 'Desenvolvimento Web' : language === 'en' ? 'Web Development' : 'Développement Web',
+    description: language === 'pt'
+      ? 'Sites e aplicações web modernas e responsivas'
+      : language === 'en'
+      ? 'Modern and responsive websites and web applications'
+      : 'Sites web et applications modernes et responsives',
+    features: language === 'pt'
+      ? ["Frontend & Backend", "Design Responsivo", "Otimização SEO", "Performance"]
+      : language === 'en'
+      ? ["Frontend & Backend", "Responsive Design", "SEO Optimization", "Performance"]
+      : ["Frontend & Backend", "Design Responsive", "Optimisation SEO", "Performance"],
+    priceRange: {
+      usd: { fixed: "From $100", hourly: "$15 - $30/h" },
+      aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(90000)}`, hourly: `${formatKwanza(13500)} - ${formatKwanza(27000)}/h`}
+    }
+  },
+  {
+    id: 'mobile-apps',
+    icon: <FaMobile className="text-3xl text-green-600 dark:text-green-400" />,
+    title: language === 'pt' ? 'Aplicações Mobile' : language === 'en' ? 'Mobile Applications' : 'Applications Mobile',
+    description: language === 'pt'
+      ? 'Apps nativas e híbridas para iOS e Android'
+      : language === 'en'
+      ? 'Native and hybrid apps for iOS and Android'
+      : 'Apps natives et hybrides pour iOS et Android',
+    features: language === 'pt'
+      ? ["React Native", "UI/UX Design", "Publicação", "Manutenção"]
+      : language === 'en'
+      ? ["React Native", "UI/UX Design", "Publishing", "Maintenance"]
+      : ["React Native", "UI/UX Design", "Publication", "Maintenance"],
+    priceRange: {
+      usd: { fixed: "From $200", hourly: "$25 - $50/h" },
+      aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(180000)}`, hourly: `${formatKwanza(22500)} - ${formatKwanza(45000)}/h` }
+    }
+  },
+  {
+    id: 'api-backend',
+    icon: <FaServer className="text-3xl text-purple-600 dark:text-purple-400" />,
+    title: 'APIs & Backend',
+    description: language === 'pt'
+      ? 'Sistemas robustos e APIs RESTful escaláveis'
+      : language === 'en'
+      ? 'Robust systems and scalable RESTful APIs'
+      : 'Systèmes robustes et APIs RESTful évolutives',
+    features: ["Node.js & Golang", "JWT Authentication", "Documentation", "Testing"],
+    priceRange: {
+      usd: { fixed: "From $150", hourly: "$20 - $40/h" },
+      aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(135000)}`, hourly: `${formatKwanza(18000)} - ${formatKwanza(36000)}/h` }
+    }
+  },
+  {
+    id: 'database',
+    icon: <FaDatabase className="text-3xl text-orange-600 dark:text-orange-400" />,
+    title: language === 'pt' ? 'Banco de Dados' : language === 'en' ? 'Database' : 'Base de Données',
+    description: language === 'pt'
+      ? 'Modelagem e otimização de bancos de dados'
+      : language === 'en'
+      ? 'Database modeling and optimization'
+      : 'Modélisation et optimisation de bases de données',
+    features: ["SQL", "Optimization", "Migrations", "Backup"],
+    priceRange: {
+      usd: { fixed: "From $120", hourly: "$20 - $35/h" },
+      aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(108000)}`, hourly: `${formatKwanza(18000)} - ${formatKwanza(31500)}/h` }
+    }
+  },
+  {
+    id: 'devops-cloud',
+    icon: <FaCloud className="text-3xl text-sky-600 dark:text-sky-400" />,
+    title: 'DevOps & Cloud',
+    description: language === 'pt'
+      ? 'Deploy e infraestrutura em cloud'
+      : language === 'en'
+      ? 'Cloud deployment and infrastructure'
+      : 'Déploiement et infrastructure cloud',
+    features: ["AWS & Vercel", "CI/CD", "Docker", "Monitoring"],
+    priceRange: {
+      usd: { fixed: "From $180", hourly: "$25 - $60/h" },
+      aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(162000)}`, hourly: `${formatKwanza(22500)} - ${formatKwanza(54000)}/h` }
+    }
   }
-};
+];
+
+
+  const t = content[language];
+
+  const handleScroll = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setMenuOpen(false);
+    }
+  };
+
+  const openServiceModal = (serviceId: string) => {
+    const s = services.find(s => s.id === serviceId)
+
+    setServiceRequest(prev => ({
+      ...prev,
+      service: s?.title || '',
+      price: s?.priceRange.aoa.fixed.split(' de ').at(1) || '',
+    }));
+    setIsServiceModalOpen(true);
+  };
+
+  const closeServiceModal = () => {
+    setIsServiceModalOpen(false);
+    setServiceRequest({
+      service: '',
+      name: '',
+      email: '',
+      phone: '',
+      budget: '',
+      deadline: '',
+      description: ''
+    });
+  };
+
+  const handleServiceRequestChange = (field: keyof ServiceRequest, value: string) => {
+    setServiceRequest(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const submitServiceRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if(sendFromWhatsapp){
+      setIsSubmittingFromWhatsapp(true);
+      setIsSubmittingFromEmail(false);
+    } else{
+      setIsSubmittingFromEmail(true);
+      setIsSubmittingFromWhatsapp(false);
+    }
+    try {
+      if(sendFromWhatsapp) {
+        // Preparar mensagem para WhatsApp
+        const whatsappMessage = `
+        *Nova Solicitação de Serviço*
+
+        *Serviço:* ${serviceRequest.service}
+        *Nome:* ${serviceRequest.name}
+        *Email:* ${serviceRequest.email}
+        *Telefone:* ${serviceRequest.phone}
+        *Preço:* ${serviceRequest.price}
+        *Prazo:* ${serviceRequest.deadline}
+
+        *Descrição:*
+        ${serviceRequest.description}
+              `.trim();
+
+        // Abrir WhatsApp
+        const whatsappUrl = `https://wa.me/+244949221682?text=${encodeURIComponent(whatsappMessage)}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        // Preparar mensagem para Email
+        const emailSubject = `Solicitação de Serviço - ${serviceRequest.service}`;
+        const emailBody = `
+        Nova solicitação de serviço no portifólio de "Henriques Ombisa":
+
+        Serviço: ${serviceRequest.service}
+        Nome: ${serviceRequest.name}
+        Email: ${serviceRequest.email}
+        Telefone: ${serviceRequest.phone}
+        Preço: ${serviceRequest.price}
+        Prazo: ${serviceRequest.deadline}
+
+        Descrição do Projeto:
+        ${serviceRequest.description}
+              `.trim();
+
+        // Também enviar por email
+        const mailtoUrl = `mailto:henriquesombisa@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+        window.location.href = mailtoUrl;
+      }
+
+      // Fechar modal após 2 segundos
+      setTimeout(() => {
+        closeServiceModal();
+        setIsSubmittingFromEmail(false);
+      setIsSubmittingFromWhatsapp(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Erro ao enviar solicitação:', error);
+        setIsSubmittingFromEmail(false);
+        setIsSubmittingFromWhatsapp(false);
+      alert(language === 'pt' ? 'Erro ao enviar solicitação.' : 
+            language === 'en' ? 'Error sending request.' : 
+            'Erreur lors de l\'envoi de la demande.');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(language, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const currentMedia = selectedCategory === 'all' 
+    ? mediaByTag.all || []
+    : mediaByTag[selectedCategory] || [];
+
+  const openMediaViewer = (media: MidiaFile, index: number) => {
+    setSelectedMedia(media);
+    setCurrentMediaIndex(index);
+  };
+
+  const closeMediaViewer = () => {
+    setSelectedMedia(null);
+  };
+
+  const navigateMedia = (direction: 'prev' | 'next') => {
+    const items = currentMedia;
+    let newIndex;
+    
+    if (direction === 'next') {
+      newIndex = (currentMediaIndex + 1) % items.length;
+    } else {
+      newIndex = (currentMediaIndex - 1 + items.length) % items.length;
+    }
+    
+    setCurrentMediaIndex(newIndex);
+    setSelectedMedia(items[newIndex]);
+  };
+
+  // URL da sua foto profissional no Cloudinary
+  const profilePhotoUrl = `https://res.cloudinary.com/${cloudName}/image/upload/v1704038400/portfolio/dbfpudwvffkq9jj0zdzj.jpg`;
+  const profilePhotoUrl2 = `https://res.cloudinary.com/${cloudName}/image/upload/v1704038400/portfolio/hdeaqqvwlxumr0xiqanm.jpg`;
 
   return (
     <>
       <Head>
         <title>{t.title}</title>
-        <meta name="description" content="Portfolio profissional de Henriques." />
+        <meta name="description" content="Portfolio profissional de Henriques Ombisa - Desenvolvedor Full Stack" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="min-h-screen font-sans text-gray-800 scroll-smooth">
-         {/* Header */}
-         <header ref={menuRef} className="bg-white/60 select-none backdrop-blur-md fixed top-0 w-full z-50">
+
+      <main className="min-h-screen font-sans text-gray-800 dark:text-gray-200 scroll-smooth bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+        {/* Header */}
+        <header ref={menuRef} className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md fixed top-0 w-full z-50 shadow-sm dark:shadow-gray-800/20">
           <div className="container mx-auto flex justify-between items-center py-4 px-6">
-            <Link href={"/"}><h1 className="text-xl font-semibold">henriquesOmbisa.</h1></Link>
-            <nav className="hidden md:flex gap-4 items-center">
-              <ul className="flex space-x-2">
-                <li><button onClick={() => handleScroll('about')} className="text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-blue-500/10 hover:scale-110 font-medium transition-all">{t.about.heading}</button></li>
-                <li><button onClick={() => handleScroll('skills')} className="text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-blue-500/10 hover:scale-110 font-medium transition-all">{t.skills}</button></li>
-                <li><button onClick={() => handleScroll('projects')} className="text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-blue-500/10 hover:scale-110 font-medium transition-all">{t.projects.title}</button></li>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white cursor-pointer"
+              onClick={() => handleScroll("hero")}
+            >henriquesOmbisa.</h1>
+            <nav className="hidden md:flex gap-6 items-center">
+              <ul className="flex space-x-6">
+                {['about', 'skills', 'services', 'gallery', 'projects', 'blog', 'contact'].map((item) => (
+                  <li key={item}>
+                    <button 
+                      onClick={() => handleScroll(item)}
+                      className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-all duration-300"
+                    >
+                      {t[item as keyof typeof t]?.heading || t[item as keyof typeof t]?.title || item}
+                    </button>
+                  </li>
+                ))}
               </ul>
+              
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300"
+                aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              >
+                {theme === 'light' ? <FaMoon className="text-lg" /> : <FaSun className="text-lg" />}
+              </button>
+              
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as Languages)} 
-                className="text-sm border border-gray-300 rounded-lg px-2 py-1"
+                className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
               >
-                <option value="pt">PT</option>
-                <option value="en">EN</option>
-                <option value="fr">FR</option>
+                <option value="pt">🇵🇹 PT</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="fr">🇫🇷 FR</option>
               </select>
             </nav>
-            {/* Hamburger Menu */}
-            <button
-              className="md:hidden text-gray-600 text-2xl"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              ☰
-            </button>
+            
+            <div className="flex items-center gap-4 md:hidden">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              >
+                {theme === 'light' ? <FaMoon /> : <FaSun />}
+              </button>
+              
+              <button
+                className="text-gray-600 dark:text-gray-300 text-2xl"
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                ☰
+              </button>
+            </div>
           </div>
+
           {menuOpen && (
-            <div className="md:hidden bg-transparent shadow-lg py-4">
-              <ul className="space-y-2 px-6">
-                <li><button onClick={() => { handleScroll('about'); setMenuOpen(false); }} className="block w-full text-left text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-blue-500/10 font-medium transition-all">{t.about.heading}</button></li>
-                <li><button onClick={() => { handleScroll('skills'); setMenuOpen(false); }} className="block w-full text-left text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-blue-500/10 font-medium transition-all">{t.skills}</button></li>
-                <li><button onClick={() => { handleScroll('projects'); setMenuOpen(false); }} className="block w-full text-left text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-blue-500/10 font-medium transition-all">{t.projects.title}</button></li>
+            <div className="md:hidden bg-white dark:bg-gray-800 shadow-lg py-4">
+              <ul className="space-y-3 px-6">
+                {['about', 'skills', 'services', 'gallery', 'projects', 'blog', 'contact'].map((item) => (
+                  <li key={item}>
+                    <button 
+                      onClick={() => handleScroll(item)}
+                      className="block w-full text-left text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-all"
+                    >
+                      {t[item as keyof typeof t]?.heading || t[item as keyof typeof t]?.title || item}
+                    </button>
+                  </li>
+                ))}
               </ul>
               <div className="px-6 mt-4">
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as Languages)}
-                className="text-sm border border-gray-300 rounded-lg px-2 py-1"
-              >
-                <option value="pt">PT</option>
-                <option value="en">EN</option>
-                <option value="fr">FR</option>
-              </select>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as Languages)}
+                  className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                >
+                  <option value="pt">🇵🇹 Português</option>
+                  <option value="en">🇺🇸 English</option>
+                  <option value="fr">🇫🇷 Français</option>
+                </select>
               </div>
             </div>
           )}
         </header>
 
-        {/* Hero Section */}
-        <section className="h-[65vh] mt-10 flex flex-col justify-center items-center text-center px-6">
-          <h2 className="text-4xl md:text-6xl font-extrabold drop-shadow-md">{t.hero.greeting}</h2>
-          <p className="mt-4 text-gray-600 text-lg md:text-xl font-medium">{t.hero.description}</p>
-          <div className="mt-8 flex flex-col justify-center items-center md:flex-row gap-4">
-            <a
-              href="mailto:henriquesombisa@gmail.com"
-              className="text-gray-600 hover:text-black text-lg"
-            >
-              <button
-                className="bg-black text-white py-3 px-6 rounded-full m-auto shadow-lg hover:bg-black/90 transition-all flex items-center gap-2"
-              >
-                {t.hero.hireMe} <FaEnvelope />
-              </button>
-            </a>
-            <a
-              href="https://wa.me/+244949221682"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:text-black text-lg"
-            >
-              <button
-                className="bg-green-500 text-white py-3 px-6 rounded-full shadow-lg hover:bg-green-600 transition-all flex items-center gap-2"
-              >
-                <FaWhatsapp /> {t.hero.whatsapp}
-              </button>
-            </a>
+        {/* Hero Section com Foto */}
+        <section id="hero" className="min-h-screen flex items-center justify-center px-6 pt-20">
+          <div className="container mx-auto max-w-6xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Text Content */}
+              <div className="text-center lg:text-left">
+                <h2 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6">
+                  {t.hero.greeting}
+                </h2>
+                <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 font-light">
+                  {t.hero.description}
+                </p>
+                <div className="flex flex-row flex-wrap sm:flex-row gap-4 justify-center lg:justify-start">
+                  <button
+                    onClick={() => handleScroll('gallery')}
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-3 px-8 rounded-full shadow-lg transition-all duration-300 font-medium flex items-center gap-2"
+                  >
+                    {t.hero.viewProjects}
+                  </button>
+                  <a
+                    href="https://wa.me/+244949221682"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 px-8 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 font-medium flex items-center gap-2"
+                  >
+                    <FaWhatsapp className="text-green-500" />
+                    {t.hero.whatsapp}
+                  </a>
+                </div>
+              </div>
+
+              {/* Profile Photo */}
+              <div className="flex justify-center lg:justify-end">
+                <div className="relative">
+                  <div className="w-80 h-80 lg:w-96 lg:h-96 rounded-full overflow-hidden border-8 border-white dark:border-gray-800 shadow-2xl">
+                    <img 
+                      src={profilePhotoUrl2}
+                      alt="Henriques Ombisa"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="absolute -bottom-4 -right-4 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-full shadow-lg">
+                    <span className="font-semibold">Full Stack</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* About Section */}
-        <section className="container mx-auto py-20 px-6" id="about">
-          <h2 className="text-center w-auto text-3xl font-bold mb-6">{t.about.heading}</h2>
-          <p className="m-auto text-center w-full md:w-3/5 text-gray-700 text-lg">{t.about.text}</p>
+        {/* About Section com Foto */}
+        <section id="about" className="py-20 bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-4xl font-bold mb-6 dark:text-white">{t.about.heading}</h2>
+                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                  {t.about.text}
+                </p>
+                <div className="flex gap-4">
+                  <a
+                    href="https://www.linkedin.com/in/nzuzi-henriques-kondo-ombisa-87a361210"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all duration-300 font-medium flex items-center gap-2"
+                  >
+                    <FaLinkedin />
+                    LinkedIn
+                  </a>
+                  <a
+                    href="https://github.com/HenriquesOmbisa"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 font-medium flex items-center gap-2"
+                  >
+                    <FaGithub />
+                    GitHub
+                  </a>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <div className="w-full max-w-md">
+                  <img 
+                    src={profilePhotoUrl}
+                    alt="Henriques Ombisa"
+                    className="w-full h-auto rounded-2xl shadow-lg"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Skills Section */}
-        <section className="py-20 px-6" id="skills">
-          <h2 className="text-4xl font-bold mb-8 text-center">{t.skills}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 container mx-auto">
-            {[
-              { name: 'HTML', icon: <FaHtml5 className="text-orange-600 text-4xl mx-auto" /> },
-              { name: 'CSS', icon: <FaCss3Alt className="text-blue-600 text-4xl mx-auto" /> },
-              { name: 'TailwindCSS', icon: <RiTailwindCssFill  className="text-sky-500 text-4xl mx-auto" /> },
-              { name: 'JavaScript', icon: <FaJs className="text-yellow-500 text-4xl mx-auto" /> },
-              { name: 'TypeScript', icon: <SiTypescript className="text-blue-600 text-4xl mx-auto" /> },
-              { name: 'React', icon: <FaReact className="text-blue-400 text-4xl mx-auto" /> },
-              { name: 'Node.js', icon: <FaNodeJs className="text-green-500 text-4xl mx-auto" /> },
-              { name: 'Golang', icon: <FaGolang  className="text-sky-500 text-4xl mx-auto" /> },
-              { name: 'PHP', icon: <FaPhp className="text-purple-500 text-4xl mx-auto" /> },
-              { name: 'Java', icon: <FaJava className="text-red-600 text-4xl mx-auto" /> },
-              { name: 'C++', icon: <SiCplusplus className="text-blue-500 text-4xl mx-auto" /> },
-              { name: 'MySQL', icon: <SiMysql className="text-sky-800 text-5xl mx-auto" /> },
-              { name: 'Postgres', icon: <BiLogoPostgresql className="text-sky-900 text-4xl mx-auto" /> },
-              { name: 'MongoDB', icon: <SiMongodb className="text-green-600 text-4xl mx-auto" /> },
-            ].map((skill, index) => (
-              <div key={index} className="bg-white shadow-lg p-6 text-center rounded-lg border-t-4 border">
-                {skill.icon}
-                <span className="text-lg font-semibold mt-2 block">{skill.name}</span>
-              </div>
-            ))}
+        <section id="skills" className="py-20 bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-6">
+            <h2 className="text-4xl font-bold text-center mb-12 dark:text-white">{t.skills}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {[
+                { name: 'HTML', icon: <FaHtml5 className="text-orange-600 dark:text-orange-500 text-4xl" /> },
+                { name: 'CSS', icon: <FaCss3Alt className="text-blue-600 dark:text-blue-500 text-4xl" /> },
+                { name: 'Tailwind', icon: <RiTailwindCssFill className="text-sky-500 text-4xl" /> },
+                { name: 'JavaScript', icon: <FaJs className="text-yellow-500 text-4xl" /> },
+                { name: 'TypeScript', icon: <SiTypescript className="text-blue-600 dark:text-blue-500 text-4xl" /> },
+                { name: 'React', icon: <FaReact className="text-blue-400 text-4xl" /> },
+                { name: 'Node.js', icon: <FaNodeJs className="text-green-500 text-4xl" /> },
+                { name: 'Golang', icon: <FaGolang className="text-sky-500 text-4xl" /> },
+                { name: 'PHP', icon: <FaPhp className="text-purple-500 text-4xl" /> },
+                { name: 'C++', icon: <SiCplusplus className="text-blue-500 text-4xl" /> },
+                { name: 'MySQL', icon: <SiMysql className="text-sky-800 dark:text-sky-600 text-4xl" /> },
+                { name: 'Postgres', icon: <BiLogoPostgresql className="text-sky-900 dark:text-sky-700 text-4xl" /> },
+              ].map((skill, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 text-center group hover:scale-105"
+                >
+                  <div className="flex justify-center mb-3">
+                    {skill.icon}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+                    {skill.name}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Projects Section */}
-        <section className="container mx-auto py-20 px-6" id="projects">
-          <h2 className="text-4xl text-center font-bold">{t.projects.title}</h2>
-          <span className='block m-auto text-gray-700 text-center mb-6'>{t.projects.description}</span>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {t.projects.contents.map((proj: Project, index: number) => (
-              <div key={index} className="bg-gray-200 p-6 rounded-lg shadow-lg border-b-4">
-                <h3 className="font-bold text-lg">{proj.title}</h3>
-                <p className="text-gray-600 mt-4">{proj.content}</p>
-                <a
-                  href={proj.url}
-                  className="text-blue-500 flex items-center gap-2 hover:underline mt-4"
-                  target="_blank"
-                  rel="noopener noreferrer"
+        {/* Services Section */}
+        <section id="services" className="py-20 bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-6">
+            <h2 className="text-4xl font-bold text-center mb-4 dark:text-white">{t.services.title}</h2>
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-12 max-w-2xl mx-auto">
+              {t.services.subtitle}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {services.filter((service)=> service.id != "mobile-apps").map((service) => (
+                <div 
+                  key={service.id}
+                  className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-600 hover:shadow-xl transition-all duration-300 group"
                 >
-                  <FaGithub /> Ver no GitHub
-                </a>
+                  <div className="flex items-center gap-4 mb-4">
+                    {service.icon}
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white">{service.title}</h3>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">{service.description}</p>
+                  <div className="mb-4">
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{service.priceRange.aoa.fixed}</span>
+                  </div>
+                  <ul className="space-y-2 mb-6">
+                    {service.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => openServiceModal(service.id)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-3 px-6 rounded-lg transition-all duration-300 font-medium"
+                  >
+                    {t.services.requestService}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Gallery Section */}
+        <section id="gallery" className="py-20 bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-6">
+            <h2 className="text-4xl font-bold text-center mb-4 dark:text-white">{t.gallery.title}</h2>
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-12 max-w-2xl mx-auto">
+              {t.gallery.subtitle}
+            </p>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              {tags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedCategory(tag)}
+                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                    selectedCategory === tag 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <FaFilter />
+                  {tag === 'all' ? t.gallery.all : tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Gallery Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {midias.map((media, index) => (
+                <div 
+                  key={index}
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
+                  onClick={() => openMediaViewer(media, index)}
+                >
+                  <div className="relative overflow-hidden">
+                    {media.type === 'image' ? (
+                      <img
+                        src={media.url}
+                        alt={String(index)}
+                        className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="relative">
+                        <video 
+                          src={media.url}
+                          className="w-full h-64 object-cover"
+                          muted
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-10 transition-all duration-300">
+                          <FaPlay className="text-white text-4xl opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute top-4 right-4">
+                      {media.type === 'image' ? (
+                        <ImageIcon className="text-white text-lg bg-black bg-opacity-50 p-2 rounded-full" size={20} />
+                      ) : (
+                        <Video className="text-white text-lg bg-black bg-opacity-50 p-2 rounded-full" size={20} />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors capitalize">
+                      {media.url.split('/').pop()?.split('.').at(0)}
+                    </h3>
+                    
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {media.tags?.map((tag, tagIndex) => (
+                        <span 
+                          key={tagIndex}
+                          className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full capitalize"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                        {media.type}
+                      </span>
+                      <div className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1">
+                        <Eye size={16} />
+                        Ver Detalhes
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {midias.length === 0 && (
+              <div className="text-center py-12">
+                <ImageIcon className="text-gray-400 dark:text-gray-500 mx-auto mb-4" size={64} />
+                <p className="text-gray-600 dark:text-gray-400">
+                  {language === 'pt' ? 'Nenhuma mídia encontrada para esta categoria.' : 
+                   language === 'en' ? 'No media found for this category.' : 
+                   'Aucun média trouvé pour cette catégorie.'}
+                </p>
               </div>
-            ))}
+            )}
+          </div>
+        </section>
+
+        {/* Projects Section (GitHub) */}
+        <section id="projects" className="py-20 bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-6">
+            <h2 className="text-4xl font-bold text-center mb-4 dark:text-white">{t.projects.title}</h2>
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-12">
+              {t.projects.description}
+            </p>
+            
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : projects.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {projects.map((project) => (
+                  <div 
+                    key={project.id}
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                  >
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {project.name}
+                        </h3>
+                        <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                          {project.language || 'Mixed'}
+                        </span>
+                      </div>
+                      
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+                        {project.description || 'Sem descrição disponível.'}
+                      </p>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <div className="flex items-center gap-1">
+                          <FaStar className="text-yellow-500" />
+                          <span>{project.stargazers_count} {t.projects.stars}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <FaGithub />
+                          <span>{project.forks_count} {t.projects.forks}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                        {t.projects.updated}: {formatDate(project.updated_at)}
+                      </div>
+                      
+                      <a
+                        href={project.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
+                      >
+                        <FaGithub />
+                        {t.projects.viewOnGitHub}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FaGithub className="text-6xl text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
+                  {language === 'pt' ? 'Nenhum projecto encontrado no Github' : 
+                   language === 'en' ? 'No projects found on Github' : 
+                   'Aucun projet trouvé sur Github'}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Blog Section */}
+        <section id="blog" className="py-20 bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-6">
+            <h2 className="text-4xl font-bold text-center mb-4 dark:text-white">{t.blog.title}</h2>
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-12 max-w-2xl mx-auto">
+              {t.blog.subtitle}
+            </p>
+            
+            {blogLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : blogPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {blogPosts.map((post) => (
+                  <article 
+                    key={post.id}
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                  >
+                    {post.cover_image && (
+                      <div className="h-48 overflow-hidden">
+                        <img 
+                          src={post.cover_image} 
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                      
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+                        {post.description}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {post.tag_list.slice(0, 3).map((tag, index) => (
+                          <span 
+                            key={index}
+                            className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full"
+                          >
+                            <Tag size={12} />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <div className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          <span>{t.blog.published}: {formatDate(post.readable_publish_date)}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1">
+                            <Heart size={14} />
+                            {post.positive_reactions_count}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle size={14} />
+                            {post.comments_count}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <a
+                        href={post.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
+                      >
+                        <SiDevdotto />
+                        {t.blog.readMore}
+                        <FaExternalLinkAlt className="text-xs" />
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <SiDevdotto className="text-6xl text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
+                  {language === 'pt' ? 'Nenhum artigo encontrado no Dev.to' : 
+                   language === 'en' ? 'No articles found on Dev.to' : 
+                   'Aucun article trouvé sur Dev.to'}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section id="contact" className="py-20 bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-4xl font-bold text-center mb-4 dark:text-white">{t.contact.title}</h2>
+              <p className="text-gray-600 dark:text-gray-300 text-center mb-12">
+                {t.contact.subtitle}
+              </p>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Contact Info */}
+                <div className="space-y-6">
+                  <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold mb-6 dark:text-white">
+                      {language === 'pt' ? 'Informações de Contato' : 
+                       language === 'en' ? 'Contact Information' : 
+                       'Informations de Contact'}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <a
+                        href="mailto:henriquesombisa@gmail.com"
+                        className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <FaEnvelope className="text-xl text-gray-400" />
+                        <div>
+                          <p className="font-medium dark:text-white">Email</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">henriquesombisa@gmail.com</p>
+                        </div>
+                      </a>
+                      
+                      <a
+                        href="https://wa.me/+244949221682"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <FaWhatsapp className="text-xl text-green-500" />
+                        <div>
+                          <p className="font-medium dark:text-white">WhatsApp</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">+244 949 221 682</p>
+                        </div>
+                      </a>
+                      
+                      <a
+                        href="https://github.com/HenriquesOmbisa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <FaGithub className="text-xl text-gray-400" />
+                        <div>
+                          <p className="font-medium dark:text-white">GitHub</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">@HenriquesOmbisa</p>
+                        </div>
+                      </a>
+                      
+                      <a
+                        href="https://www.linkedin.com/in/nzuzi-henriques-kondo-ombisa-87a361210"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-400 transition-colors p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <FaLinkedin className="text-xl text-blue-600" />
+                        <div>
+                          <p className="font-medium dark:text-white">LinkedIn</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Nzuzi Henriques Kondo Ombisa</p>
+                        </div>
+                      </a>
+
+                      <a
+                        href="https://dev.to/henriquesombisa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <SiDevdotto className="text-xl text-gray-400" />
+                        <div>
+                          <p className="font-medium dark:text-white">Dev.to</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">@henriquesombisa</p>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Contact Form */}
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold mb-6 dark:text-white">
+                    {language === 'pt' ? 'Mensagem Rápida' : 
+                     language === 'en' ? 'Quick Message' : 
+                     'Message Rapide'}
+                  </h3>
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const subject = "Contato do Portfolio";
+                      const body = `Nome: ${e.currentTarget.contactName.value}%0D%0AEmail: ${e.currentTarget.contactEmail.value}%0D%0AMensagem: ${e.currentTarget.contactMessage.value}`;
+                      window.location.href = `mailto:henriquesombisa@gmail.com?subject=${subject}&body=${body}`;
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <input
+                        type="text"
+                        name="contactName"
+                        placeholder={t.contact.name}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
+                      />
+                    </div>
+                    
+                    <div>
+                      <input
+                        type="email"
+                        name="contactEmail"
+                        placeholder={t.contact.email}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
+                      />
+                    </div>
+                    
+                    <div>
+                      <textarea
+                        name="contactMessage"
+                        placeholder={t.contact.message}
+                        required
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 resize-vertical"
+                      />
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-3 px-6 rounded-lg transition-all duration-300 font-medium"
+                    >
+                      {t.contact.send}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="bg-white py-8 text-center shadow-inner">
-          <div className="flex justify-center gap-4 mb-4">
-            <a
-              href="https://github.com/HenriquesOmbisa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-800 hover:text-black text-2xl"
-            >
-              <FaGithub />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/nzuzi-henriques-kondo-ombisa-87a361210"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 text-2xl"
-            >
-              <FaLinkedin />
-            </a>
-            <a
-              href="mailto:henriquesombisa@gmail.com"
-              className="text-gray-600 hover:text-black text-2xl"
-            >
-              <FaEnvelope />
-            </a>
+        <footer className="bg-gray-900 dark:bg-gray-950 text-white py-12">
+          <div className="container mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="mb-6 md:mb-0">
+                <p className="text-gray-400">{t.footer}</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  &copy; {new Date().getFullYear()} - {language === 'pt' ? 'Todos os direitos reservados' : 
+                  language === 'en' ? 'All rights reserved' : 
+                  'Tous droits réservés'}
+                </p>
+              </div>
+              
+              <div className="flex gap-6">
+                <a
+                  href="https://github.com/HenriquesOmbisa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white transition-colors text-xl"
+                >
+                  <FaGithub />
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/nzuzi-henriques-kondo-ombisa-87a361210"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-blue-400 transition-colors text-xl"
+                >
+                  <FaLinkedin />
+                </a>
+                <a
+                  href="https://dev.to/henriquesombisa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white transition-colors text-xl"
+                >
+                  <SiDevdotto />
+                </a>
+                <a
+                  href="mailto:henriquesombisa@gmail.com"
+                  className="text-gray-400 hover:text-white transition-colors text-xl"
+                >
+                  <FaEnvelope />
+                </a>
+                <a
+                  href="https://wa.me/+244949221682"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-green-400 transition-colors text-xl"
+                >
+                  <FaWhatsapp />
+                </a>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-600">{t.footer} &copy; {new Date().getFullYear()}</p>
         </footer>
+
+        {/* Service Request Modal */}
+        {isServiceModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+                    {t.services.requestService}
+                  </h3>
+                  <button
+                    onClick={closeServiceModal}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <form onSubmit={submitServiceRequest} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t.services.selectService}
+                    </label>
+                    <input
+                      type="text"
+                      value={serviceRequest.service}
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t.contact.name} *
+                      </label>
+                      <input
+                        type="text"
+                        value={serviceRequest.name}
+                        onChange={(e) => handleServiceRequestChange('name', e.target.value)}
+                        required
+                        className="w-full text-sm px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                        placeholder={t.contact.name}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t.contact.email} *
+                      </label>
+                      <input
+                        type="email"
+                        value={serviceRequest.email}
+                        onChange={(e) => handleServiceRequestChange('email', e.target.value)}
+                        required
+                        className="w-full text-sm px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                        placeholder={t.contact.email}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t.contact.phone} *
+                    </label>
+                    <input
+                      type="tel"
+                      value={serviceRequest.phone}
+                      onChange={(e) => handleServiceRequestChange('phone', e.target.value)}
+                      required
+                      className="w-full text-sm px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      placeholder={t.contact.phone}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t.services.price} *
+                      </label>
+                      <input
+                      type="text"
+                      value={serviceRequest.price}
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t.services.deadline} *
+                      </label>
+                      <select
+                        value={serviceRequest.deadline}
+                        onChange={(e) => handleServiceRequestChange('deadline', e.target.value)}
+                        required
+                        className="w-full text-sm px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      >
+                        <option className="text-xs md:text-sm" value="">{t.services.selectService}</option>
+                        <option className="text-xs md:text-sm" value={t.services.deadlineOptions.urgent}>{t.services.deadlineOptions.urgent}</option>
+                        <option className="text-xs md:text-sm" value={t.services.deadlineOptions.medium}>{t.services.deadlineOptions.medium}</option>
+                        <option className="text-xs md:text-sm" value={t.services.deadlineOptions.flexible}>{t.services.deadlineOptions.flexible}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t.services.description} *
+                    </label>
+                    <textarea
+                      value={serviceRequest.description}
+                      onChange={(e) => handleServiceRequestChange('description', e.target.value)}
+                      required
+                      rows={6}
+                      className="w-full text-sm px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 resize-vertical"
+                      placeholder={language === 'pt' ? 'Descreva seu projeto em detalhes...' : 
+                                   language === 'en' ? 'Describe your project in detail...' : 
+                                   'Décrivez votre projet en détail...'}
+                    />
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={closeServiceModal}
+                      className="flex-1 text-sm h-max w-max border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 px-6 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 font-medium"
+                    >
+                      {language === 'pt' ? 'Cancelar' : language === 'en' ? 'Cancel' : 'Annuler'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingFromWhatsapp}
+                      onClick={()=> setSendFromWhatsapp(true)}
+                      className="flex-1 text-sm h-max w-max bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white py-3 px-6 rounded-lg transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isSubmittingFromWhatsapp ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          {t.services.sending}
+                        </>
+                      ) : (
+                        <>
+                          <FaWhatsapp className="text-lg" />
+                          {t.services.sendRequest}
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingFromEmail}
+                      onClick={()=> setSendFromWhatsapp(false)}
+                      className="flex-1 text-sm h-max w-max bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-3 px-6 rounded-lg transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isSubmittingFromEmail ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          {t.services.sending}
+                        </>
+                      ) : (
+                        <>
+                          <FaEnvelope className="text-lg" />
+                          {t.services.sendRequest}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Media Viewer Modal */}
+        {selectedMedia && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
+            <div className="relative max-w-6xl w-full max-h-[90vh]">
+              {/* Close Button */}
+              <button
+                onClick={closeMediaViewer}
+                className="absolute top-4 right-4 text-white text-2xl z-10 bg-black bg-opacity-50 p-2 rounded-full hover:bg-opacity-70 transition-all duration-300"
+              >
+                <FaTimes />
+              </button>
+
+              {/* Navigation Buttons */}
+              {currentMedia.length > 1 && (
+                <>
+                  <button
+                    onClick={() => navigateMedia('prev')}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-2xl z-10 bg-black bg-opacity-50 p-3 rounded-full hover:bg-opacity-70 transition-all duration-300"
+                  >
+                    <FaChevronLeft />
+                  </button>
+                  
+                  <button
+                    onClick={() => navigateMedia('next')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-2xl z-10 bg-black bg-opacity-50 p-3 rounded-full hover:bg-opacity-70 transition-all duration-300"
+                  >
+                    <FaChevronRight />
+                  </button>
+                </>
+              )}
+
+              {/* Content */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden max-h-[80vh] flex flex-col">
+                {/* Media */}
+                <div className="flex-1 relative">
+                  {selectedMedia.type === 'image' ? (
+                    <img 
+                      src={selectedMedia.url}
+                      alt={selectedMedia.type}
+                      className="w-full h-full object-contain max-h-[60vh]"
+                    />
+                  ) : (
+                    <video 
+                      src={selectedMedia.url}
+                      controls
+                      autoPlay
+                      className="w-full h-full object-contain max-h-[60vh]"
+                    />
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="p-6 bg-white dark:bg-gray-800">
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3 capitalize">
+                    {selectedMedia.url.split('/').pop()?.split('.').at(0)}
+                  </h3>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedMedia.tags?.map((tag, index) => (
+                      <span 
+                        key={index}
+                        className="text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full capitalize"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                      {selectedMedia.type}
+                    </span>
+                    <a
+                      href={selectedMedia.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 font-medium flex items-center gap-2"
+                    >
+                      <FaExternalLinkAlt />
+                      Abrir Original
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Counter */}
+              {currentMedia.length > 1 && (
+                <div className="text-white text-center mt-4">
+                  {currentMediaIndex + 1} / {currentMedia.length}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
 };
-
-export default Home;

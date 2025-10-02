@@ -238,7 +238,7 @@ const Header: React.FC<{
   setMenuOpen: (open: boolean) => void;
   handleScroll: (id: string) => void;
   t: Translations;
-  menuRef: React.RefObject<HTMLDivElement>;
+  menuRef: React.RefObject<HTMLDivElement | null>;
 }> = ({ language, setLanguage, theme, toggleTheme, menuOpen, setMenuOpen, handleScroll, t, menuRef }) => {
   return (
     <header ref={menuRef} className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md fixed top-0 w-full z-50 shadow-sm dark:shadow-gray-800/20">
@@ -255,7 +255,9 @@ const Header: React.FC<{
                   onClick={() => handleScroll(item)}
                   className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-all duration-300"
                 >
-                  {t[item as keyof typeof t]?.heading || t[item as keyof typeof t]?.title || item}
+                  {typeof t[item as keyof typeof t] === 'object'
+                    ? ((t[item as keyof typeof t] as any).heading || (t[item as keyof typeof t] as any).title || item)
+                    : item}
                 </button>
               </li>
             ))}
@@ -307,7 +309,9 @@ const Header: React.FC<{
                   onClick={() => handleScroll(item)}
                   className="block w-full text-left text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-all"
                 >
-                  {t[item as keyof typeof t]?.heading || t[item as keyof typeof t]?.title || item}
+                  {typeof t[item as keyof typeof t] === 'object'
+                    ? ((t[item as keyof typeof t] as any).heading || (t[item as keyof typeof t] as any).title || item)
+                    : item}
                 </button>
               </li>
             ))}
@@ -615,9 +619,10 @@ const ServicesSection: React.FC<{
 const GallerySection: React.FC<{
   t: Translations;
   selectedCategory: string;
+  language: Languages;
   setSelectedCategory: (category: string) => void;
   openMediaViewer: (media: MediaFile, index: number) => void;
-}> = ({ t, selectedCategory, openMediaViewer }) => {
+}> = ({ t, selectedCategory, openMediaViewer, language }) => {
   
 
   return (
@@ -2054,6 +2059,7 @@ ${serviceRequest.description}
         <GallerySection
           t={t}
           selectedCategory={selectedCategory}
+          language={language}
           setSelectedCategory={setSelectedCategory}
           openMediaViewer={openMediaViewer}
         />

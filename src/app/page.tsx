@@ -186,7 +186,7 @@ const SOCIAL_LINKS = {
 
 const MEDIA_FILES: MediaFile[] = [
   {
-    url: "/midia/eduplus.png",
+    url: "/portifolio/midia/eduplus.png",
     tags: ["web", "React", "Nextjs"],
     type: "image",
     title: "EduPlus - Plataforma Educacional",
@@ -194,7 +194,7 @@ const MEDIA_FILES: MediaFile[] = [
     projectUrl: "https://github.com/HenriquesOmbisa/eduplus"
   },
   {
-    url: "/midia/globaltrade.png",
+    url: "/portifolio/midia/globaltrade.png",
     tags: ["web", "React", "Nextjs"],
     type: "image",
     title: "GlobalTrade - E-commerce",
@@ -202,7 +202,7 @@ const MEDIA_FILES: MediaFile[] = [
     projectUrl: "https://github.com/HenriquesOmbisa/globaltrade"
   },
   {
-    url: "/midia/paperhub.png",
+    url: "/portifolio/midia/paperhub.png",
     tags: ["web", "React", "Nextjs"],
     type: "image",
     title: "PaperHub - Gestão Acadêmica",
@@ -210,7 +210,7 @@ const MEDIA_FILES: MediaFile[] = [
     projectUrl: "https://github.com/HenriquesOmbisa/paperhub"
   },
   {
-    url: "/midia/saudeplus.png",
+    url: "/portifolio/midia/saudeplus.png",
     tags: ["web", "React", "Nextjs"],
     type: "image",
     title: "SaúdePlus - Sistema de Saúde",
@@ -218,7 +218,7 @@ const MEDIA_FILES: MediaFile[] = [
     projectUrl: "https://github.com/HenriquesOmbisa/saudeplus"
   },
   {
-    url: "/midia/zyon.webm",
+    url: "/portifolio/midia/zyon.webm",
     tags: ["web", "React", "Nextjs"],
     type: "video",
     title: "Zyon - Dashboard Analytics",

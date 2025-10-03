@@ -499,10 +499,10 @@ const ServicesSection: React.FC<{
         ? 'Modern and responsive websites and web applications'
         : 'Sites web et applications modernes et responsives',
       features: language === 'pt'
-        ? ["Frontend & Backend", "Design Responsivo", "Otimização SEO", "Performance"]
+        ? ["Frontend, Backend & Wordpress", "Design Responsivo", "Otimização SEO", "Performance"]
         : language === 'en'
-        ? ["Frontend & Backend", "Responsive Design", "SEO Optimization", "Performance"]
-        : ["Frontend & Backend", "Design Responsive", "Optimisation SEO", "Performance"],
+        ? ["Frontend, Backend & Wordpress", "Responsive Design", "SEO Optimization", "Performance"]
+        : ["Frontend, Backend & Wordpress", "Design Responsive", "Optimisation SEO", "Performance"],
       priceRange: {
         usd: { fixed: "From $100", hourly: "$15 - $30/h" },
         aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(90000)}`, hourly: `${formatKwanza(13500)} - ${formatKwanza(27000)}/h`}
@@ -536,7 +536,7 @@ const ServicesSection: React.FC<{
         : language === 'en'
         ? 'Robust systems and scalable RESTful APIs'
         : 'Systèmes robustes et APIs RESTful évolutives',
-      features: ["Node.js & Golang", "JWT Authentication", "Documentation", "Testing"],
+      features: ["Golang, PHP & Node.js", "JWT Authentication", "Documentation", "Testing", "Deployment", "Maintenance",],
       priceRange: {
         usd: { fixed: "From $150", hourly: "$20 - $40/h" },
         aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(135000)}`, hourly: `${formatKwanza(18000)} - ${formatKwanza(36000)}/h` }
@@ -566,7 +566,7 @@ const ServicesSection: React.FC<{
         : language === 'en'
         ? 'Cloud deployment and infrastructure'
         : 'Déploiement et infrastructure cloud',
-      features: ["AWS & Vercel", "CI/CD", "Docker", "Monitoring"],
+      features: ["AWS, Render & Vercel", "CI/CD", "Docker", "Monitoring", "VPS Setup", "SSL", "Domains", "Nginx & Reverse Proxy"],
       priceRange: {
         usd: { fixed: "From $180", hourly: "$25 - $60/h" },
         aoa: { fixed: `${language === 'pt' ? 'A partir de ' : language === 'en' ? 'From ' : 'À partir de '} ${formatKwanza(162000)}`, hourly: `${formatKwanza(22500)} - ${formatKwanza(54000)}/h` }
@@ -1362,7 +1362,7 @@ const MediaViewer: React.FC<{
   onNavigate: (direction: 'prev' | 'next') => void;
   currentMedia: MediaFile[];
   t: Translations;
-}> = ({ selectedMedia, onClose, currentMediaIndex, onNavigate, currentMedia, t }) => {
+}> = ({ selectedMedia, onClose, currentMediaIndex, onNavigate, currentMedia }) => {
   if (!selectedMedia) return null;
 
   return (
@@ -1432,18 +1432,7 @@ const MediaViewer: React.FC<{
             </div>
             
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <div className="flex flex-wrap gap-2">
-                {selectedMedia.demoUrl && (
-                  <a
-                    href={selectedMedia.demoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-all duration-300 font-medium flex items-center gap-2"
-                  >
-                    <FaExternalLinkAlt />
-                    {t.gallery.viewDemo}
-                  </a>
-                )}
+              <div className="flex flex-1 flex-wrap gap-2">
                 <a
                   href={selectedMedia.url}
                   target="_blank"

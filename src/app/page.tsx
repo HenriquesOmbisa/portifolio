@@ -171,8 +171,8 @@ const PERSONAL_DATA = {
   devto: "henriquesombisa",
   cloudName: "dg9nrdi5c",
   profiles: {
-    photo1: "https://res.cloudinary.com/dg9nrdi5c/image/upload/v1704038400/portfolio/dbfpudwvffkq9jj0zdzj.jpg",
-    photo2: "https://res.cloudinary.com/dg9nrdi5c/image/upload/v1704038400/portfolio/hdeaqqvwlxumr0xiqanm.jpg"
+    photo1: "/portifolio/midia/avatar-1.jpg",
+    photo2: "/portifolio/midia/avatar-2.jpg"
   }
 };
 

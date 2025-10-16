@@ -164,7 +164,7 @@ type MediaFile = {
 const PERSONAL_DATA = {
   name: "Henriques Ombisa",
   email: "henriquesombisa@gmail.com",
-  phone: "+244 927 252 329",
+  phone: "+244 949 221 682",
   whatsapp: "+244927252329",
   github: "HenriquesOmbisa",
   linkedin: "nzuzi-henriques-kondo-ombisa-87a361210",

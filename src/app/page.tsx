@@ -172,7 +172,7 @@ const PERSONAL_DATA = {
   cloudName: "dg9nrdi5c",
   profiles: {
     photo1: "/portifolio/midia/avatar-1.jpg",
-    photo2: "/portifolio/midia/avatar-3.png",
+    photo2: "/portifolio/midia/avatar-2.jpg",
   }
 };
 
